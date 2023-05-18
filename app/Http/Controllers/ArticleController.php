@@ -9,15 +9,34 @@ use Illuminate\Http\Request;
 
 class ArticleController extends Controller
 {
+    protected $thirdPartyServices;
+
+
+    public function __construct(ThirdPartyApiService $thirdPartyApiService)
+    {
+        $this->thirdPartyServices = $thirdPartyApiService;
+    }
+
     public function getNewsApiData()
     {
-        $response = (new ThirdPartyApiService())->getDataFromApi(config('apisUrls.NewsApiUrl'), config('apisKeys.NewsApiKey'));
-        return $response['articles'];
+        $request=new Request(['q'=>'a']);
+        $arrayNewsApi = $this->thirdPartyServices->normalizingNewsApi($request);
+        $arrayGuardian = $this->thirdPartyServices->normalizingGuardianApi($request);
+        $arrayNYTimes = $this->thirdPartyServices->normalizingNYTimesApi($request);
+        $response= array_merge($arrayNewsApi,$arrayGuardian,$arrayNYTimes);
+        \response([
+            'articles'=>$response
+        ]);
     }
     public function searchArticles(Request $request)
     {
-         $response=(new ThirdPartyApiService())->searchDataFromApi($request,config('apisUrls.NewsApiUrl'), config('apisKeys.NewsApiKey'));
-        return $response['articles'];
+        $arrayNewsApi = $this->thirdPartyServices->normalizingNewsApi($request);
+        $arrayGuardian = $this->thirdPartyServices->normalizingGuardianApi($request);
+        $arrayNYTimes = $this->thirdPartyServices->normalizingNYTimesApi($request);
+        $response= array_merge($arrayNewsApi,$arrayGuardian,$arrayNYTimes);
+        \response([
+            'articles'=>$response
+        ]);
     }
 
     public function getArticlesAndPreferenceById(Request $request){
@@ -28,8 +47,10 @@ class ArticleController extends Controller
         $pref['source']=$preference->source->name;
         $pref['country']=$preference->country->name;
         $pref['start_date']=$preference->date->start_date;
+        $request = new Request($pref);
 
-        $articles=(new ThirdPartyApiService())->searchDataFromApi($pref,config('apisUrls.NewsApiUrl'), config('apisKeys.NewsApiKey'));
+
+        $articles=(new ThirdPartyApiService())->searchDataFromApi($request,config('apisUrls.NewsApiUrl'), config('apisKeys.NewsApiKey'));
 
         return \response([
             'articles'=>$articles,

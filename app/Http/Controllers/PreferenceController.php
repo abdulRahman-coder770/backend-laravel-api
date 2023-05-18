@@ -19,7 +19,7 @@ class PreferenceController extends Controller
     protected $thirdPartyServices;
 
 
-    public function __construct(thirdPartyApiService $thirdPartyApiService)
+    public function __construct(ThirdPartyApiService $thirdPartyApiService)
     {
         $this->thirdPartyServices = $thirdPartyApiService;
 
